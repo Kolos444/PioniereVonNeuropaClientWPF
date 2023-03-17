@@ -5,8 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PioniereVonNeuropa"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Width="1280" Height="720">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="4*" />
+			<ColumnDefinition Width="1*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="4*" />
+			<RowDefinition Height="1*" />
+		</Grid.RowDefinitions>
+		<Grid Grid.Row="0" Grid.Column="0" Name="BoardGrid">
 
-    </Grid>
+		</Grid>
+		<Button Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">Test</Button>
+		<Button Grid.Row="1" Grid.Column="0">Test</Button>
+	</Grid>
 </Window>

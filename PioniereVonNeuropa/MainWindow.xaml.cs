@@ -20,6 +20,24 @@ namespace PioniereVonNeuropa{
 	public partial class MainWindow : Window{
 		public MainWindow() {
 			InitializeComponent();
+
+		}
+
+		private Polygon CreateHex(int size) {
+			Polygon hex = new() {
+				Points = new() {
+					new(size       * 0.5, 0),
+					new(size, size * 0.3),
+					new(size, size * 0.7),
+					new(size       *0.5, size),
+					new(0, size * 0.7),
+					new(0, size * 0.3)
+
+				},
+				Fill = Brushes.Red
+			};
+
+			return hex;
 		}
 	}
 }
