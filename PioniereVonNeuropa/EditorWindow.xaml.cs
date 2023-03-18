@@ -1,36 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 
 namespace PioniereVonNeuropa{
 	/// <summary>
-	/// Interaction logic for MainWindow.xaml
+	/// Interaction logic for EditorWindow.xaml
 	/// </summary>
-	public partial class MainWindow : Window{
-		private        string path = "C:/Users/Luca/RiderProjects/CatanTests/CatanTests/bin/Debug/net7.0/board.json";
-		private static int    hexagonWidth = 140;
-		private        int    hexagonRadius;
-		private        int    hexagonHeight;
-		private        int    roadWidth    = 6;
-		private        double nodeDiameter = hexagonWidth * 0.15;
+	public partial class EditorWindow{
+		private const           int    HexagonWidth  = 140;
+		private static readonly int    HexagonRadius = (int)(HexagonWidth / Math.Sqrt(3));
+		private static readonly int    HexagonHeight = 2 * HexagonRadius;
+		private const           int    RoadWidth     = 6;
+		private const           double NodeDiameter  = HexagonWidth * 0.15;
 
+		private Resource _malt = Resource.Land;
+		private Game?    _game;
 
-		public MainWindow() {
+		public EditorWindow() {
 			InitializeComponent();
 
 			CreateGame(7, 7);
@@ -48,20 +39,18 @@ namespace PioniereVonNeuropa{
 
 		private void CreateGame(Game newGame) {
 			CanvasBoard.Children.Clear();
-			Game          = newGame;
-			hexagonRadius = (int)(hexagonWidth / Math.Sqrt(3));
-			hexagonHeight = 2 * hexagonRadius;
-			for (int y = 0; y < Game.Height; y++){
-				for (int x = 0; x < Game.Width; x++){
-					Grid uiElement = CreateHex(ref Game.Tiles[y * Game.Width + x]);
+			_game = newGame;
+			for (int y = 0; y < _game.Height; y++){
+				for (int x = 0; x < _game.Width; x++){
+					Grid uiElement = CreateHex(ref _game.Tiles[y * _game.Width + x]);
 
-					Canvas.SetTop(uiElement, nodeDiameter + y * (hexagonHeight + roadWidth) * 0.75);
+					Canvas.SetTop(uiElement, NodeDiameter + y * (HexagonHeight + RoadWidth) * 0.75);
 					if (y % 2 == 0)
-						Canvas.SetLeft(uiElement, nodeDiameter + x * (hexagonWidth + roadWidth));
+						Canvas.SetLeft(uiElement, NodeDiameter + x * (HexagonWidth + RoadWidth));
 					else
 						Canvas.SetLeft(
 							uiElement,
-							nodeDiameter + x * (hexagonWidth + roadWidth) + (hexagonWidth + roadWidth) * 0.5);
+							NodeDiameter + x * (HexagonWidth + RoadWidth) + (HexagonWidth + RoadWidth) * 0.5);
 
 					CanvasBoard.Children.Add(uiElement);
 				}
@@ -69,44 +58,42 @@ namespace PioniereVonNeuropa{
 		}
 
 		private Grid CreateHex(ref Tile tile) {
-			Grid  grid = new Grid();
-			Brush brush;
-			brush = GetResourceBrush(tile.Resource);
+			Grid  grid  = new Grid();
 
 			Polygon hex = new() {
 				Points = new() {
-					new(hexagonWidth       * 0.5, 0),
-					new(hexagonWidth, 0.25 * hexagonHeight),
-					new(hexagonWidth, 0.75 * hexagonHeight),
-					new(hexagonWidth       * 0.5, hexagonHeight),
-					new(0, 0.75            * hexagonHeight),
-					new(0, 0.25            * hexagonHeight)
+					new(HexagonWidth       * 0.5, 0),
+					new(HexagonWidth, 0.25 * HexagonHeight),
+					new(HexagonWidth, 0.75 * HexagonHeight),
+					new(HexagonWidth       * 0.5, HexagonHeight),
+					new(0, 0.75            * HexagonHeight),
+					new(0, 0.25            * HexagonHeight)
 				},
-				Fill = brush
+				Fill = GetResourceBrush(tile.Resource)
 			};
 
-			Label value = new Label() {
+			Label value = new() {
 				Content = tile.Value
 			};
 			value.HorizontalAlignment = HorizontalAlignment.Center;
-			value.VerticalAlignment = VerticalAlignment.Center;
+			value.VerticalAlignment   = VerticalAlignment.Center;
 
 			int arrayAccesor = tile.ID - 1;
-			grid.MouseLeftButtonDown += (sender, args) => {
-				if (Game.Tiles[arrayAccesor].Resource == malt)
+			grid.MouseLeftButtonDown += (_, _) => {
+				if (_game!.Tiles[arrayAccesor].Resource == _malt)
 					return;
 
-				if (malt == Resource.None){
-					if(value.Content.ToString() == ComboBoxWert.Text)
+				if (_malt == Resource.None){
+					if (value.Content.ToString() == ComboBoxWert.Text)
 						return;
 
 					value.Content                  = ComboBoxWert.Text;
-					Game.Tiles[arrayAccesor].Value = Convert.ToInt32(ComboBoxWert.Text);
+					_game.Tiles[arrayAccesor].Value = Convert.ToInt32(ComboBoxWert.Text);
 					return;
 				}
 
-				hex.Fill                          = GetResourceBrush(malt);
-				Game.Tiles[arrayAccesor].Resource = malt;
+				hex.Fill                          = GetResourceBrush(_malt);
+				_game.Tiles[arrayAccesor].Resource = _malt;
 			};
 			grid.Children.Add(hex);
 			grid.Children.Add(value);
@@ -150,7 +137,7 @@ namespace PioniereVonNeuropa{
 					brush = Brushes.NavajoWhite;
 					break;
 				default:
-					throw new ArgumentOutOfRangeException("Resourcenvalue falsch");
+					throw new ArgumentOutOfRangeException(nameof(resource));
 			}
 
 			return brush;
@@ -165,19 +152,19 @@ namespace PioniereVonNeuropa{
 				case ROADDIRECTION.Vertical:
 					points = new() {
 						new(0, 0),
-						new(0, 0.5 * hexagonHeight),
+						new(0, 0.5 * HexagonHeight),
 					};
 					break;
 				case ROADDIRECTION.UpDown:
 					points = new() {
 						new(0, 0),
-						new(hexagonWidth * 0.5, 0.25 * hexagonHeight),
+						new(HexagonWidth * 0.5, 0.25 * HexagonHeight),
 					};
 					break;
 				case ROADDIRECTION.DownUp:
 					points = new() {
-						new(0, 0.25      * hexagonHeight),
-						new(hexagonWidth * 0.5, 0),
+						new(0, 0.25      * HexagonHeight),
+						new(HexagonWidth * 0.5, 0),
 					};
 					break;
 			}
@@ -187,7 +174,7 @@ namespace PioniereVonNeuropa{
 				Y1              = points[0].Y,
 				X2              = points[1].X,
 				Y2              = points[1].Y,
-				StrokeThickness = roadWidth,
+				StrokeThickness = RoadWidth,
 				Stroke          = Brushes.Black
 			};
 
@@ -198,8 +185,8 @@ namespace PioniereVonNeuropa{
 		private Ellipse CreateNode() {
 			Ellipse node = new Ellipse() {
 				Fill   = new SolidColorBrush(Color.FromArgb(130, 132, 55, 0)),
-				Width  = nodeDiameter,
-				Height = nodeDiameter,
+				Width  = NodeDiameter,
+				Height = NodeDiameter,
 				Stroke = Brushes.Black
 			};
 
@@ -207,24 +194,21 @@ namespace PioniereVonNeuropa{
 			return node;
 		}
 
-		private Resource malt  = Resource.Land;
-		private bool     hafen = false;
-		private Game     Game;
 
 		private void ButtonLandClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Land;
+			_malt = Resource.Land;
 		}
 
 		private void ButtonWasserClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Water;
+			_malt = Resource.Water;
 		}
 
 		private void ButtonHafenClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Harbor;
+			_malt = Resource.Harbor;
 		}
 
 		private void ButtonDefinitiverHafenClick(object sender, RoutedEventArgs e) {
-			malt = Resource.DefinitiveHarbor;
+			_malt = Resource.DefinitiveHarbor;
 		}
 
 		private void ButtonsSpeichernClick(object sender, RoutedEventArgs e) {
@@ -234,7 +218,7 @@ namespace PioniereVonNeuropa{
 			if (test.ShowDialog() == true){
 				Stream stream = test.OpenFile();
 
-				stream.Write(JsonSerializer.SerializeToUtf8Bytes(Game));
+				stream.Write(JsonSerializer.SerializeToUtf8Bytes(_game));
 				stream.Close();
 			}
 		}
@@ -263,32 +247,32 @@ namespace PioniereVonNeuropa{
 		}
 
 		private void ButtonLehmClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Brick;
+			_malt = Resource.Brick;
 		}
 
 		private void ButtonWolleClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Sheep;
+			_malt = Resource.Sheep;
 		}
 
 		private void ButtonErzClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Ore;
+			_malt = Resource.Ore;
 		}
 
 		private void ButtonWeizenClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Wheat;
+			_malt = Resource.Wheat;
 		}
 
 		private void ButtonHolzClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Wood;
+			_malt = Resource.Wood;
 		}
 
 		private void ButtonWertClick(object sender, RoutedEventArgs e) {
-			malt = Resource.None;
+			_malt = Resource.None;
 		}
 
 
 		private void ButtonWuesteClick(object sender, RoutedEventArgs e) {
-			malt = Resource.Desert;
+			_malt = Resource.Desert;
 		}
 	}
 

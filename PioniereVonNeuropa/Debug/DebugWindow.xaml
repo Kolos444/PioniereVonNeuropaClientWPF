@@ -1,0 +1,14 @@
+﻿<Window x:Class="PioniereVonNeuropa.Debug.DebugWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:PioniereVonNeuropa.Debug"
+        mc:Ignorable="d"
+        Title="DebugWindow" Width="1920" Height="1080" Background="Black">
+	<Grid>
+		<Canvas Name="ContainingCanvas" Background="DarkSlateGray">
+			<Canvas Name="BoardCanvas" Background="Indigo"></Canvas>
+		</Canvas>
+	</Grid>
+</Window>

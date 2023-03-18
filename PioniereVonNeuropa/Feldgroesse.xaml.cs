@@ -6,7 +6,7 @@ using System.Windows.Input;
 namespace PioniereVonNeuropa;
 
 public partial class Feldgroesse : Window{
-	public int Width = 7, Height = 7;
+	public new int Width = 7, Height = 7;
 	public Feldgroesse() {
 		InitializeComponent();
 

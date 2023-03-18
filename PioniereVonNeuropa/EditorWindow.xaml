@@ -1,11 +1,10 @@
-﻿<Window x:Class="PioniereVonNeuropa.MainWindow"
+﻿<Window x:Class="PioniereVonNeuropa.EditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:PioniereVonNeuropa"
         mc:Ignorable="d"
-        Title="MainWindow" Width="1280" Height="720">
+        Title="EditorWindow" Width="1280" Height="720">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="4*" />
@@ -15,8 +14,8 @@
 			<RowDefinition Height="4*" />
 			<RowDefinition Height="200" />
 		</Grid.RowDefinitions>
-		<Canvas Name="CanvasBoard"></Canvas>
-		<StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
+		<Canvas Name="CanvasBoard" Background="Blue"></Canvas>
+		<StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Background="DarkSlateGray">
 			<GroupBox Header="Malen mit">
 				<StackPanel>
 					<Button Click="ButtonLandClick" Width="100" Height="30">Land</Button>
@@ -33,7 +32,6 @@
 						<Button Click="ButtonWertClick" Width="100" Height="30">Wert</Button>
 						<ComboBox Name="ComboBoxWert">
 							<ComboBoxItem IsSelected="True">0</ComboBoxItem>
-							<ComboBoxItem>1</ComboBoxItem>
 							<ComboBoxItem>2</ComboBoxItem>
 							<ComboBoxItem>3</ComboBoxItem>
 							<ComboBoxItem>4</ComboBoxItem>
@@ -57,5 +55,6 @@
 				</StackPanel>
 			</GroupBox>
 		</StackPanel>
+		<StackPanel Grid.Row="1" Grid.Column="0" Background="DarkSlateGray"></StackPanel>
 	</Grid>
 </Window>

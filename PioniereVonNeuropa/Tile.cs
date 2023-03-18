@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PioniereVonNeuropa;
+﻿namespace PioniereVonNeuropa;
 
 public class Tile{
 	/// <summary>
@@ -19,7 +17,11 @@ public class Tile{
 
 	}
 
-	public Tile(){}
+	public Tile() {
+		Neighbours = new int[6];
+		Nodes      = new int[6];
+		Roads      = new int[6];
+	}
 
 	/// <summary>
 	/// Initialisiert ein Resourcen Feld

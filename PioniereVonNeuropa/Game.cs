@@ -1,4 +1,6 @@
-﻿namespace PioniereVonNeuropa;
+﻿using System;
+
+namespace PioniereVonNeuropa;
 
 public class Game{
 	public Game(int width, int height) {
@@ -14,7 +16,17 @@ public class Game{
 		GenerateEmptyBoard();
 	}
 
-	public Game(){}
+	/// <summary>
+	/// Weil er sonst rumheult
+	/// </summary>
+	/// <remarks>
+	/// Sollte man nicht benutzen
+	/// </remarks>
+	public Game() {
+		Tiles = Array.Empty<Tile>();
+		Nodes = Array.Empty<Node>();
+		Roads = Array.Empty<Road>();
+	}
 
 	public int    Width  { get; set; }
 	public int    Height { get; set;}
