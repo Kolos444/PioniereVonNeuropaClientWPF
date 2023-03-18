@@ -7,10 +7,4 @@
         <UseWPF>true</UseWPF>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Reference Include="CatanTests">
-        <HintPath>..\..\CatanTests\CatanTests\bin\Debug\net7.0\CatanTests.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>
