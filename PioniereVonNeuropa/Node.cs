@@ -1,4 +1,4 @@
-﻿namespace CatanTests;
+﻿namespace PioniereVonNeuropa;
 
 public class Node{
 	public Node(int id) {

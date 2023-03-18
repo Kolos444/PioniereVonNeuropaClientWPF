@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace CatanTests;
+﻿namespace PioniereVonNeuropa;
 
 public class Game{
 	public Game(int width, int height) {
@@ -16,11 +14,13 @@ public class Game{
 		GenerateEmptyBoard();
 	}
 
-	public int    Width  { get; }
-	public int    Height { get; }
-	public Tile[] Tiles  { get; }
-	public Node[] Nodes  { get; }
-	public Road[] Roads  { get; }
+	public Game(){}
+
+	public int    Width  { get; set; }
+	public int    Height { get; set;}
+	public Tile[] Tiles  { get; set;}
+	public Node[] Nodes  { get; set;}
+	public Road[] Roads  { get; set;}
 
 	private void GenerateEmptyBoard() {
 		int nodeId = 1;

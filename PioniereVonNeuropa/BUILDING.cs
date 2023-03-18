@@ -1,4 +1,4 @@
-﻿namespace CatanTests;
+﻿namespace PioniereVonNeuropa;
 
 public enum BUILDING{
 	None = 0,

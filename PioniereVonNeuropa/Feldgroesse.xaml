@@ -1,0 +1,22 @@
+﻿<Window x:Class="PioniereVonNeuropa.Feldgroesse"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:PioniereVonNeuropa"
+        mc:Ignorable="d"
+        Title="Feldgroesse" MinHeight="250" MinWidth="333" Width="333" Height="250">
+	<Grid Margin="15">
+
+		<StackPanel>
+			<Label Name="lblQuestion">Width und Height:</Label>
+			<TextBox Name="WidthBox" MinWidth="250" Height="22" PreviewTextInput="TxtAnswer_OnPreviewTextInput" Margin="10"></TextBox>
+			<TextBox Name="HeightBox" MinWidth="250" Height="22" PreviewTextInput="TxtAnswer_OnPreviewTextInput" Margin="10"></TextBox>
+
+			<WrapPanel HorizontalAlignment="Right" Margin="0,15,0,0">
+				<Button IsDefault="True" Name="btnDialogOk" MinWidth="60" Margin="0,0,10,0" Click="ButtonOKClick">_Ok</Button>
+				<Button IsCancel="True" MinWidth="60">_Cancel</Button>
+			</WrapPanel>
+		</StackPanel>
+	</Grid>
+</Window>

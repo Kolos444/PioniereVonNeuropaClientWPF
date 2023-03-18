@@ -1,4 +1,6 @@
-﻿namespace CatanTests;
+﻿using System;
+
+namespace PioniereVonNeuropa;
 
 public class Tile{
 	/// <summary>
@@ -14,10 +16,10 @@ public class Tile{
 		Nodes      = new int[6];
 		Roads      = new int[6];
 
-		if (harbor){
-			Value = null;
-		}
+
 	}
+
+	public Tile(){}
 
 	/// <summary>
 	/// Initialisiert ein Resourcen Feld
@@ -25,7 +27,7 @@ public class Tile{
 	/// <param name="resource">Die Resource die das Feld erträgt</param>
 	/// <param name="value">Bei welchem Würfelwurf das Feld erträge gibt</param>
 	/// <param name="id">Eindeutige Nummer</param>
-	public Tile(int id, RESOURCE resource, int value) : this(id, false) {
+	public Tile(int id, Resource resource, int value) : this(id, false) {
 		Resource = resource;
 		Value    = value;
 	}
@@ -35,7 +37,7 @@ public class Tile{
 	/// </summary>
 	/// <param name="id">Eindeutige Nummer</param>
 	/// <param name="resource">Welche Resource der Hafen tauscht, wenn nicht angegeben 3:1 jeder Resource</param>
-	public Tile(int id, RESOURCE resource = RESOURCE.None) : this(id, true) {
+	public Tile(int id, Resource resource = Resource.None) : this(id, true) {
 		Resource = resource;
 	}
 
@@ -47,11 +49,11 @@ public class Tile{
 		Roads      = new int[6];
 	}
 
-	public int ID { get; }
+	public int ID { get; set; }
 
-	public RESOURCE Resource { get; set; }
-	public int?     Value    { get; }
-	public bool     Harbor   { get; }
+	public Resource Resource { get; set; }
+	public int     Value    { get; set; }
+	public bool     Harbor   { get; set; }
 
 	/// <summary>
 	/// 0-5
@@ -62,12 +64,12 @@ public class Tile{
 	/// <para> Links </para>
 	/// Oben Links
 	/// </summary>
-	public int[] Neighbours { get; }
+	public int[] Neighbours { get; set; }
 
 	/// <summary>
 	/// 0 - 5 Oben bis Oben Links
 	/// </summary>
-	public int[] Nodes { get; }
+	public int[] Nodes { get; set; }
 
 	/// <summary>
 	/// 0-5
@@ -78,5 +80,5 @@ public class Tile{
 	/// <para> Links </para>
 	/// Oben Links
 	/// </summary>
-	public int[] Roads { get; }
+	public int[] Roads { get; set; }
 }

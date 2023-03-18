@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,7 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using CatanTests;
+using Microsoft.Win32;
 
 namespace PioniereVonNeuropa{
 	/// <summary>
@@ -32,14 +33,27 @@ namespace PioniereVonNeuropa{
 		public MainWindow() {
 			InitializeComponent();
 
+			CreateGame(7, 7);
+		}
 
-			Game = new Game(6, 6);
+		private void CreateInstance() {
+			Feldgroesse feldgroesse = new Feldgroesse();
+			if (feldgroesse.ShowDialog() == true)
+				CreateGame(feldgroesse.Width, feldgroesse.Height);
+		}
 
+		private void CreateGame(int width, int height) {
+			CreateGame(new Game(width, height));
+		}
+
+		private void CreateGame(Game newGame) {
+			CanvasBoard.Children.Clear();
+			Game          = newGame;
 			hexagonRadius = (int)(hexagonWidth / Math.Sqrt(3));
 			hexagonHeight = 2 * hexagonRadius;
 			for (int y = 0; y < Game.Height; y++){
 				for (int x = 0; x < Game.Width; x++){
-					Polygon uiElement = CreateHex(ref Game.Tiles[y * Game.Width + x]);
+					Grid uiElement = CreateHex(ref Game.Tiles[y * Game.Width + x]);
 
 					Canvas.SetTop(uiElement, nodeDiameter + y * (hexagonHeight + roadWidth) * 0.75);
 					if (y % 2 == 0)
@@ -54,7 +68,8 @@ namespace PioniereVonNeuropa{
 			}
 		}
 
-		private Polygon CreateHex(ref Tile tile) {
+		private Grid CreateHex(ref Tile tile) {
+			Grid  grid = new Grid();
 			Brush brush;
 			brush = GetResourceBrush(tile.Resource);
 
@@ -70,38 +85,69 @@ namespace PioniereVonNeuropa{
 				Fill = brush
 			};
 
+			Label value = new Label() {
+				Content = tile.Value
+			};
+			value.HorizontalAlignment = HorizontalAlignment.Center;
+			value.VerticalAlignment = VerticalAlignment.Center;
+
 			int arrayAccesor = tile.ID - 1;
-			hex.MouseLeftButtonDown += (sender, args) => {
+			grid.MouseLeftButtonDown += (sender, args) => {
 				if (Game.Tiles[arrayAccesor].Resource == malt)
 					return;
 
-				hex.Fill = GetResourceBrush(malt);
+				if (malt == Resource.None){
+					if(value.Content.ToString() == ComboBoxWert.Text)
+						return;
+
+					value.Content                  = ComboBoxWert.Text;
+					Game.Tiles[arrayAccesor].Value = Convert.ToInt32(ComboBoxWert.Text);
+					return;
+				}
+
+				hex.Fill                          = GetResourceBrush(malt);
 				Game.Tiles[arrayAccesor].Resource = malt;
 			};
-
-			return hex;
+			grid.Children.Add(hex);
+			grid.Children.Add(value);
+			return grid;
 		}
 
-		private static Brush GetResourceBrush(RESOURCE resource) {
+		private static Brush GetResourceBrush(Resource resource) {
 			Brush brush;
 			switch (resource){
-				case RESOURCE.None:
-					brush = Brushes.Blue;
+				case Resource.None:
+					brush = Brushes.Black;
 					break;
-				case RESOURCE.Wood:
+				case Resource.Wood:
 					brush = Brushes.DarkGreen;
 					break;
-				case RESOURCE.Wheat:
+				case Resource.Wheat:
 					brush = Brushes.Yellow;
 					break;
-				case RESOURCE.Brick:
+				case Resource.Brick:
 					brush = Brushes.OrangeRed;
 					break;
-				case RESOURCE.Ore:
+				case Resource.Ore:
 					brush = Brushes.DarkGray;
 					break;
-				case RESOURCE.Sheep:
+				case Resource.Sheep:
 					brush = Brushes.LawnGreen;
+					break;
+				case Resource.Water:
+					brush = Brushes.Blue;
+					break;
+				case Resource.Harbor:
+					brush = Brushes.Aqua;
+					break;
+				case Resource.DefinitiveHarbor:
+					brush = Brushes.MediumAquamarine;
+					break;
+				case Resource.Land:
+					brush = Brushes.Brown;
+					break;
+				case Resource.Desert:
+					brush = Brushes.NavajoWhite;
 					break;
 				default:
 					throw new ArgumentOutOfRangeException("Resourcenvalue falsch");
@@ -161,24 +207,88 @@ namespace PioniereVonNeuropa{
 			return node;
 		}
 
-		private RESOURCE malt  = RESOURCE.None;
+		private Resource malt  = Resource.Land;
 		private bool     hafen = false;
 		private Game     Game;
 
 		private void ButtonLandClick(object sender, RoutedEventArgs e) {
-			malt = RESOURCE.Wood;
+			malt = Resource.Land;
 		}
 
 		private void ButtonWasserClick(object sender, RoutedEventArgs e) {
-			malt = RESOURCE.None;
+			malt = Resource.Water;
 		}
 
 		private void ButtonHafenClick(object sender, RoutedEventArgs e) {
-			malt = RESOURCE.None;
+			malt = Resource.Harbor;
 		}
 
 		private void ButtonDefinitiverHafenClick(object sender, RoutedEventArgs e) {
-			malt = RESOURCE.None;
+			malt = Resource.DefinitiveHarbor;
+		}
+
+		private void ButtonsSpeichernClick(object sender, RoutedEventArgs e) {
+			SaveFileDialog test = new SaveFileDialog();
+			test.Filter = "json files (*.json)|*.json";
+
+			if (test.ShowDialog() == true){
+				Stream stream = test.OpenFile();
+
+				stream.Write(JsonSerializer.SerializeToUtf8Bytes(Game));
+				stream.Close();
+			}
+		}
+
+		private void ButtonsNeuClick(object sender, RoutedEventArgs e) {
+			CreateInstance();
+		}
+
+		private void ButtonsLadenClick(object sender, RoutedEventArgs e) {
+			OpenFileDialog fileDialog = new OpenFileDialog();
+
+			fileDialog.Filter = "json files (*.json)|*.json";
+			if (fileDialog.ShowDialog() == true){
+				Stream stream = fileDialog.OpenFile();
+
+
+				Game? newGame = JsonSerializer.Deserialize<Game>(stream);
+				stream.Close();
+				if (newGame == null){
+					MessageBox.Show("Fehler beim Laden der Datei");
+					return;
+				}
+
+				CreateGame(newGame);
+			}
+		}
+
+		private void ButtonLehmClick(object sender, RoutedEventArgs e) {
+			malt = Resource.Brick;
+		}
+
+		private void ButtonWolleClick(object sender, RoutedEventArgs e) {
+			malt = Resource.Sheep;
+		}
+
+		private void ButtonErzClick(object sender, RoutedEventArgs e) {
+			malt = Resource.Ore;
+		}
+
+		private void ButtonWeizenClick(object sender, RoutedEventArgs e) {
+			malt = Resource.Wheat;
+		}
+
+		private void ButtonHolzClick(object sender, RoutedEventArgs e) {
+			malt = Resource.Wood;
+		}
+
+		private void ButtonWertClick(object sender, RoutedEventArgs e) {
+			malt = Resource.None;
+		}
+
+
+		private void ButtonWuesteClick(object sender, RoutedEventArgs e) {
+			malt = Resource.Desert;
 		}
 	}
 
