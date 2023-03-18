@@ -22,7 +22,7 @@ namespace PioniereVonNeuropa{
 	/// </summary>
 	public partial class MainWindow : Window{
 		private        string path = "C:/Users/Luca/RiderProjects/CatanTests/CatanTests/bin/Debug/net7.0/board.json";
-		private static int    hexagonWidth = 90;
+		private static int    hexagonWidth = 140;
 		private        int    hexagonRadius;
 		private        int    hexagonHeight;
 		private        int    roadWidth    = 6;
@@ -32,30 +32,32 @@ namespace PioniereVonNeuropa{
 		public MainWindow() {
 			InitializeComponent();
 
-			CanvasBoard.Background = Brushes.Blue;
 
-			Game game = new Game(6, 6);
+			Game = new Game(6, 6);
 
 			hexagonRadius = (int)(hexagonWidth / Math.Sqrt(3));
 			hexagonHeight = 2 * hexagonRadius;
-			for (int y = 0; y < game.Height; y++){
-				for (int x = 0; x < game.Width; x++){
-					Polygon uiElement = CreateHex(Brushes.Gray);
+			for (int y = 0; y < Game.Height; y++){
+				for (int x = 0; x < Game.Width; x++){
+					Polygon uiElement = CreateHex(ref Game.Tiles[y * Game.Width + x]);
 
 					Canvas.SetTop(uiElement, nodeDiameter + y * (hexagonHeight + roadWidth) * 0.75);
 					if (y % 2 == 0)
 						Canvas.SetLeft(uiElement, nodeDiameter + x * (hexagonWidth + roadWidth));
 					else
-						Canvas.SetLeft(uiElement, nodeDiameter + x * (hexagonWidth + roadWidth) + (hexagonWidth + roadWidth) * 0.5);
+						Canvas.SetLeft(
+							uiElement,
+							nodeDiameter + x * (hexagonWidth + roadWidth) + (hexagonWidth + roadWidth) * 0.5);
 
 					CanvasBoard.Children.Add(uiElement);
 				}
 			}
-
-			CanvasBoard.Children.Add(CreateNode());
 		}
 
-		private Polygon CreateHex(Brush brush) {
+		private Polygon CreateHex(ref Tile tile) {
+			Brush brush;
+			brush = GetResourceBrush(tile.Resource);
+
 			Polygon hex = new() {
 				Points = new() {
 					new(hexagonWidth       * 0.5, 0),
@@ -68,9 +70,46 @@ namespace PioniereVonNeuropa{
 				Fill = brush
 			};
 
+			int arrayAccesor = tile.ID - 1;
+			hex.MouseLeftButtonDown += (sender, args) => {
+				if (Game.Tiles[arrayAccesor].Resource == malt)
+					return;
+
+				hex.Fill = GetResourceBrush(malt);
+				Game.Tiles[arrayAccesor].Resource = malt;
+			};
 
 			return hex;
 		}
+
+		private static Brush GetResourceBrush(RESOURCE resource) {
+			Brush brush;
+			switch (resource){
+				case RESOURCE.None:
+					brush = Brushes.Blue;
+					break;
+				case RESOURCE.Wood:
+					brush = Brushes.DarkGreen;
+					break;
+				case RESOURCE.Wheat:
+					brush = Brushes.Yellow;
+					break;
+				case RESOURCE.Brick:
+					brush = Brushes.OrangeRed;
+					break;
+				case RESOURCE.Ore:
+					brush = Brushes.DarkGray;
+					break;
+				case RESOURCE.Sheep:
+					brush = Brushes.LawnGreen;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException("Resourcenvalue falsch");
+			}
+
+			return brush;
+		}
+
 
 		private Line CreateRoad(ROADDIRECTION direction) {
 			PointCollection points;
@@ -112,15 +151,37 @@ namespace PioniereVonNeuropa{
 
 		private Ellipse CreateNode() {
 			Ellipse node = new Ellipse() {
-				Fill   = Brushes.Brown,
+				Fill   = new SolidColorBrush(Color.FromArgb(130, 132, 55, 0)),
 				Width  = nodeDiameter,
 				Height = nodeDiameter,
+				Stroke = Brushes.Black
 			};
 
 
 			return node;
 		}
+
+		private RESOURCE malt  = RESOURCE.None;
+		private bool     hafen = false;
+		private Game     Game;
+
+		private void ButtonLandClick(object sender, RoutedEventArgs e) {
+			malt = RESOURCE.Wood;
+		}
+
+		private void ButtonWasserClick(object sender, RoutedEventArgs e) {
+			malt = RESOURCE.None;
+		}
+
+		private void ButtonHafenClick(object sender, RoutedEventArgs e) {
+			malt = RESOURCE.None;
+		}
+
+		private void ButtonDefinitiverHafenClick(object sender, RoutedEventArgs e) {
+			malt = RESOURCE.None;
+		}
 	}
+
 
 	internal enum ROADDIRECTION{
 		Vertical,
