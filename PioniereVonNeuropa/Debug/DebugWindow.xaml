@@ -7,8 +7,44 @@
         mc:Ignorable="d"
         Title="DebugWindow" Width="1920" Height="1080" Background="Black">
 	<Grid>
-		<Canvas Name="ContainingCanvas" Background="DarkSlateGray">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="1*" />
+			<ColumnDefinition Width="250" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="1*" />
+			<RowDefinition Height="250" />
+		</Grid.RowDefinitions>
+		<Canvas Grid.ColumnSpan="2" Grid.RowSpan="2" Name="ContainingCanvas" Background="DarkBlue">
 			<Canvas Name="BoardCanvas" Background="Indigo"></Canvas>
 		</Canvas>
+
+		<StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
+
+		</StackPanel>
+		<StackPanel Grid.Column="0" Grid.Row="1">
+			<WrapPanel HorizontalAlignment="Right">
+				<TextBox>...'s Turn</TextBox>
+				<TextBox>Timer</TextBox>
+			</WrapPanel>
+			<WrapPanel>
+				<Grid Width="700" Height="150" Background="Beige">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="1*" />
+						<ColumnDefinition Width="1*" />
+					</Grid.ColumnDefinitions>
+
+					<WrapPanel Grid.Column="0" Name="ResourceWrapPanel" />
+					<WrapPanel Grid.Column="1" Name="DeveleopmentWrapPanel" />
+				</Grid>
+
+				<Button Width="100" Height="100" Click="DevcardClick">Devcard</Button>
+				<Button Width="100" Height="100" Click="RoadClick">Road</Button>
+				<Button Width="100" Height="100" Click="VillageClick">Village</Button>
+				<Button Width="100" Height="100" Click="CityClick">City</Button>
+				<Button Width="100" Height="100" Click="TradeClick">Trade</Button>
+				<Button Width="100" Height="100" Click="EndClick">End Turn</Button>
+			</WrapPanel>
+		</StackPanel>
 	</Grid>
 </Window>

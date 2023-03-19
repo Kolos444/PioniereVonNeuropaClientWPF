@@ -30,6 +30,8 @@ public class Game{
 
 	public int    Width  { get; set; }
 	public int    Height { get; set;}
+	public int    Deserts { get; set;}
+	public int    Harbours { get; set;}
 	public Tile[] Tiles  { get; set;}
 	public Node[] Nodes  { get; set;}
 	public Road[] Roads  { get; set;}

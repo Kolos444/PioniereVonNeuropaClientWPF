@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.Win32;
@@ -20,6 +22,7 @@ namespace PioniereVonNeuropa{
 
 		private Resource _malt = Resource.Land;
 		private Game?    _game;
+		private bool     Harbour = false;
 
 		public EditorWindow() {
 			InitializeComponent();
@@ -58,7 +61,7 @@ namespace PioniereVonNeuropa{
 		}
 
 		private Grid CreateHex(ref Tile tile) {
-			Grid  grid  = new Grid();
+			Grid grid = new Grid();
 
 			Polygon hex = new() {
 				Points = new() {
@@ -80,20 +83,19 @@ namespace PioniereVonNeuropa{
 
 			int arrayAccesor = tile.ID - 1;
 			grid.MouseLeftButtonDown += (_, _) => {
-				if (_game!.Tiles[arrayAccesor].Resource == _malt)
-					return;
-
-				if (_malt == Resource.None){
-					if (value.Content.ToString() == ComboBoxWert.Text)
+				if (!Harbour){
+					if (_game.Tiles[arrayAccesor].Resource == _malt)
 						return;
 
-					value.Content                  = ComboBoxWert.Text;
-					_game.Tiles[arrayAccesor].Value = Convert.ToInt32(ComboBoxWert.Text);
-					return;
+					_game.Tiles[arrayAccesor].Resource = _malt;
+					hex.Fill                           = GetResourceBrush(_malt);
+					_game.Tiles[arrayAccesor].Harbor   = false;
 				}
-
-				hex.Fill                          = GetResourceBrush(_malt);
-				_game.Tiles[arrayAccesor].Resource = _malt;
+				else{
+					_game.Tiles[arrayAccesor].Harbor   = true;
+					_game.Tiles[arrayAccesor].Resource = Resource.None;
+					hex.Fill                           = Brushes.Aqua;
+				}
 			};
 			grid.Children.Add(hex);
 			grid.Children.Add(value);
@@ -124,12 +126,6 @@ namespace PioniereVonNeuropa{
 				case Resource.Water:
 					brush = Brushes.Blue;
 					break;
-				case Resource.Harbor:
-					brush = Brushes.Aqua;
-					break;
-				case Resource.DefinitiveHarbor:
-					brush = Brushes.MediumAquamarine;
-					break;
 				case Resource.Land:
 					brush = Brushes.Brown;
 					break;
@@ -144,76 +140,28 @@ namespace PioniereVonNeuropa{
 		}
 
 
-		private Line CreateRoad(ROADDIRECTION direction) {
-			PointCollection points;
-
-			switch (direction){
-				default: //Eigentlich unnötig
-				case ROADDIRECTION.Vertical:
-					points = new() {
-						new(0, 0),
-						new(0, 0.5 * HexagonHeight),
-					};
-					break;
-				case ROADDIRECTION.UpDown:
-					points = new() {
-						new(0, 0),
-						new(HexagonWidth * 0.5, 0.25 * HexagonHeight),
-					};
-					break;
-				case ROADDIRECTION.DownUp:
-					points = new() {
-						new(0, 0.25      * HexagonHeight),
-						new(HexagonWidth * 0.5, 0),
-					};
-					break;
-			}
-
-			Line road = new() {
-				X1              = points[0].X,
-				Y1              = points[0].Y,
-				X2              = points[1].X,
-				Y2              = points[1].Y,
-				StrokeThickness = RoadWidth,
-				Stroke          = Brushes.Black
-			};
-
-
-			return road;
-		}
-
-		private Ellipse CreateNode() {
-			Ellipse node = new Ellipse() {
-				Fill   = new SolidColorBrush(Color.FromArgb(130, 132, 55, 0)),
-				Width  = NodeDiameter,
-				Height = NodeDiameter,
-				Stroke = Brushes.Black
-			};
-
-
-			return node;
-		}
-
-
 		private void ButtonLandClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Land;
+			Harbour = false;
+			_malt   = Resource.Land;
 		}
 
 		private void ButtonWasserClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Water;
+			Harbour = false;
+			_malt   = Resource.Water;
 		}
 
 		private void ButtonHafenClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Harbor;
+			Harbour = true;
 		}
 
-		private void ButtonDefinitiverHafenClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.DefinitiveHarbor;
-		}
 
 		private void ButtonsSpeichernClick(object sender, RoutedEventArgs e) {
-			SaveFileDialog test = new SaveFileDialog();
-			test.Filter = "json files (*.json)|*.json";
+			SaveFileDialog test = new() {
+				Filter = "json files (*.json)|*.json"
+			};
+
+			_game.Harbours = Convert.ToInt32(TextBoxHarbours.Text);
+			_game.Deserts  = Convert.ToInt32(TextBoxDeserts.Text);
 
 			if (test.ShowDialog() == true){
 				Stream stream = test.OpenFile();
@@ -247,32 +195,44 @@ namespace PioniereVonNeuropa{
 		}
 
 		private void ButtonLehmClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Brick;
+			Harbour = false;
+			_malt   = Resource.Brick;
 		}
 
 		private void ButtonWolleClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Sheep;
+			Harbour = false;
+			_malt   = Resource.Sheep;
 		}
 
 		private void ButtonErzClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Ore;
+			Harbour = false;
+			_malt   = Resource.Ore;
 		}
 
 		private void ButtonWeizenClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Wheat;
+			Harbour = false;
+			_malt   = Resource.Wheat;
 		}
 
 		private void ButtonHolzClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Wood;
+			Harbour = false;
+			_malt   = Resource.Wood;
 		}
 
 		private void ButtonWertClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.None;
+			Harbour = false;
+			_malt   = Resource.None;
 		}
 
 
 		private void ButtonWuesteClick(object sender, RoutedEventArgs e) {
-			_malt = Resource.Desert;
+			Harbour = false;
+			_malt   = Resource.Desert;
+		}
+
+		private static readonly Regex _regex = new Regex("[^0-9.-]+"); //regex that matches disallowed text
+		private void OnlyTypeNumber(object sender, TextCompositionEventArgs e) {
+			e.Handled = _regex.IsMatch(e.Text);
 		}
 	}
 

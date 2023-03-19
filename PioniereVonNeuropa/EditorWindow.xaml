@@ -21,7 +21,6 @@
 					<Button Click="ButtonLandClick" Width="100" Height="30">Land</Button>
 					<Button Click="ButtonWasserClick" Width="100" Height="30">Wasser</Button>
 					<Button Click="ButtonHafenClick" Width="100" Height="30">Möglicher Hafen</Button>
-					<Button Click="ButtonDefinitiverHafenClick" Width="100" Height="30">Definitiver Hafen</Button>
 					<Button Click="ButtonHolzClick" Width="100" Height="30">Holz</Button>
 					<Button Click="ButtonWeizenClick" Width="100" Height="30">Weizen</Button>
 					<Button Click="ButtonErzClick" Width="100" Height="30">Erz</Button>
@@ -45,6 +44,14 @@
 						</ComboBox>
 					</WrapPanel>
 
+				</StackPanel>
+			</GroupBox>
+			<GroupBox Header="Einstellungen">
+				<StackPanel>
+					<Label>Wüsten</Label>
+					<TextBox Name="TextBoxDeserts" PreviewTextInput="OnlyTypeNumber" />
+					<Label>Häfen</Label>
+					<TextBox Name="TextBoxHarbours" PreviewTextInput="OnlyTypeNumber" />
 				</StackPanel>
 			</GroupBox>
 			<GroupBox Header="Datei">

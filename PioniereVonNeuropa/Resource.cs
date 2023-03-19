@@ -8,8 +8,6 @@ public enum Resource{
 	Ore,
 	Sheep,
 	Water,
-	Harbor,
-	DefinitiveHarbor,
 	Land,
 	Desert
 }

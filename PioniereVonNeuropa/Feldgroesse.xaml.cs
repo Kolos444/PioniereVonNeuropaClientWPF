@@ -12,7 +12,7 @@ public partial class Feldgroesse : Window{
 
 	}
 	private static readonly Regex _regex = new Regex("[^0-9.-]+"); //regex that matches disallowed text
-	private void TxtAnswer_OnPreviewTextInput(object sender, TextCompositionEventArgs e) {
+	void TxtAnswer_OnPreviewTextInput(object sender, TextCompositionEventArgs e) {
 		e.Handled = _regex.IsMatch(e.Text);
 	}
 
