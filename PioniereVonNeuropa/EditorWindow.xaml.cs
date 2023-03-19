@@ -89,10 +89,10 @@ namespace PioniereVonNeuropa{
 
 					_game.Tiles[arrayAccesor].Resource = _malt;
 					hex.Fill                           = GetResourceBrush(_malt);
-					_game.Tiles[arrayAccesor].Harbor   = false;
+					_game.Tiles[arrayAccesor].Harbour   = false;
 				}
 				else{
-					_game.Tiles[arrayAccesor].Harbor   = true;
+					_game.Tiles[arrayAccesor].Harbour   = true;
 					_game.Tiles[arrayAccesor].Resource = Resource.None;
 					hex.Fill                           = Brushes.Aqua;
 				}
@@ -160,7 +160,7 @@ namespace PioniereVonNeuropa{
 				Filter = "json files (*.json)|*.json"
 			};
 
-			_game.Harbours = Convert.ToInt32(TextBoxHarbours.Text);
+			_game.MaxHarbour = Convert.ToInt32(TextBoxHarbours.Text);
 			_game.Deserts  = Convert.ToInt32(TextBoxDeserts.Text);
 
 			if (test.ShowDialog() == true){

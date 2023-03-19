@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,7 +14,7 @@ namespace PioniereVonNeuropa.Debug;
 public partial class DebugWindow{
 	#region Einstellbare Werte
 
-	private const           int    HexagonWidth = 140;
+	private const           int    HexagonWidth = 100;
 	private const           int    RoadWidth    = 12;
 	private const           double NodeDiameter = HexagonWidth * 0.15;
 	private static readonly Color  RoadColor    = Color.FromRgb(255, 105, 0);
@@ -27,7 +26,9 @@ public partial class DebugWindow{
 	private readonly ImageBrush OreImage    = new(new BitmapImage(new("E:/Bilder/anime/Ore.jpg", UriKind.Absolute)));
 	private readonly ImageBrush LandImage   = new(new BitmapImage(new("E:/Bilder/anime/Dirt.JPG", UriKind.Absolute)));
 	private readonly ImageBrush DesertImage = new(new BitmapImage(new("E:/Bilder/anime/Desert.jpg", UriKind.Absolute)));
-	private readonly ImageBrush HarbourImage = new(new BitmapImage(new("E:/Bilder/anime/Harbour.png", UriKind.Absolute)));
+
+	private readonly ImageBrush HarbourImage =
+		new(new BitmapImage(new("E:/Bilder/anime/Harbour.png", UriKind.Absolute)));
 
 	#endregion
 
@@ -38,64 +39,49 @@ public partial class DebugWindow{
 
 	#endregion
 
-	private Game    _game;
-	private Line?[] _roads;
-	private Grid[]  _hexes;
-
+	private Game    Game;
+	private Line?[] Roads;
+	private Grid[]  Hexes;
 
 	public DebugWindow() {
 		InitializeComponent();
 
-		OpenFileDialog teest = new() { Filter = "json files (*.json)|*.json" };
-		do{
-			if (teest.ShowDialog() == true){
-				break;
-			}
-		} while (true);
+		Roads = Array.Empty<Line?>();
+		Hexes = Array.Empty<Grid>();
 
+		OpenFileDialog openFileDialog = new() { Filter = "json files (*.json)|*.json" };
+		if (openFileDialog.ShowDialog() != true){
+			Close();
+		}
 
-		_game = JsonSerializer.Deserialize<Game>(teest.OpenFile())!;
-
-		_game = Generator.GenerateGame(_game);
-
+		Game = JsonSerializer.Deserialize<Game>(openFileDialog.OpenFile())!;
+		Game = Generator.GenerateGame(Game);
 		CreateField();
 	}
 
 
 	private void CreateField() {
-		_hexes = new Grid[_game.Width * _game.Height];
-		_roads = new Line[_game.Roads.Length];
-		for (int y = 0; y < _game.Height; y++){
-			for (int x = 0; x < _game.Width; x++){
-				Grid hex = CreateHex(ref _game.Tiles[y * _game.Width + x]);
-
-				Canvas.SetTop(hex, NodeDiameter + y * (HexagonHeight + RoadWidth) * 0.75);
-				if (y % 2 == 0)
-					Canvas.SetLeft(hex, NodeDiameter + x * (HexagonWidth + RoadWidth));
-				else
-					Canvas.SetLeft(
-						hex, NodeDiameter + x * (HexagonWidth + RoadWidth) + (HexagonWidth + RoadWidth) * 0.5);
-
-
-				_hexes[y * _game.Width + x] = hex;
-
+		Hexes = new Grid[Game.Width * Game.Height];
+		for (int y = 0; y < Game.Height; y++){
+			for (int x = 0; x < Game.Width; x++){
+				Grid hex = CreateTileElement(y, x);
+				Hexes[y * Game.Width + x] = hex;
 				BoardCanvas.Children.Add(hex);
 			}
 		}
 
-		for (int index = 0; index < _hexes.Length; index++){
-			if (_game.Tiles[index].Resource == Resource.Water || _game.Tiles[index].Harbor)
+		Roads = new Line[Game.Roads.Length];
+		for (int index = 0; index < Hexes.Length; index++){
+			if (Game.Tiles[index].Resource == Resource.Water || Game.Tiles[index].Harbour)
 				continue;
 
-			ref Grid grid = ref _hexes[index];
+			double left = Canvas.GetLeft(Hexes[index]);
+			double top  = Canvas.GetTop(Hexes[index]);
 
-			double left = Canvas.GetLeft(grid);
-			double top  = Canvas.GetTop(grid);
-
-			ref Tile tile = ref _game.Tiles[index];
+			ref Tile tile = ref Game.Tiles[index];
 
 			for (int r = 0; r < tile.Roads.Length; r++){
-				if (_roads[_game.Roads[tile.Roads[r] - 1].ID - 1] != null)
+				if (Roads[Game.Roads[tile.Roads[r] - 1].ID - 1] != null)
 					continue;
 
 				Line road = CreateRoad(r);
@@ -128,9 +114,21 @@ public partial class DebugWindow{
 				}
 
 				BoardCanvas.Children.Add(road);
-				_roads[_game.Roads[tile.Roads[r] - 1].ID - 1] = road;
+				Roads[Game.Roads[tile.Roads[r] - 1].ID - 1] = road;
 			}
 		}
+	}
+
+	protected Grid CreateTileElement(int y, int x) {
+		Grid hex = CreateHex(ref Game.Tiles[y * Game.Width + x]);
+
+		Canvas.SetTop(hex, NodeDiameter + y * (HexagonHeight + RoadWidth) * 0.75);
+		if (y % 2 == 0)
+			Canvas.SetLeft(hex, NodeDiameter + x * (HexagonWidth + RoadWidth));
+		else
+			Canvas.SetLeft(
+				hex, NodeDiameter + x * (HexagonWidth + RoadWidth) + (HexagonWidth + RoadWidth) * 0.5);
+		return hex;
 	}
 
 	private static Line CreateRoad(int r) {
@@ -174,29 +172,29 @@ public partial class DebugWindow{
 			}
 		};
 
-		switch (gameTile.Resource, gameTile.Harbor){
-			case (Resource.Wood, _):
+		switch (gameTile.Resource, Harbor: gameTile.Harbour){
+			case (Resource.Wood, false):
 				hex.Fill = WoodImage;
 				break;
-			case (Resource.Wheat, _):
+			case (Resource.Wheat, false):
 				hex.Fill = WheatImage;
 				break;
-			case (Resource.Brick, _):
+			case (Resource.Brick, false):
 				hex.Fill = BrickImage;
 				break;
-			case (Resource.Ore, _):
+			case (Resource.Ore, false):
 				hex.Fill = OreImage;
 				break;
-			case (Resource.Sheep, _):
+			case (Resource.Sheep, false):
 				hex.Fill = SheepImage;
 				break;
-			case (Resource.Water, _):
+			case (Resource.Water, false):
 				hex.Fill = Brushes.Transparent;
 				break;
-			case (Resource.Land, _):
+			case (Resource.Land, false):
 				hex.Fill = LandImage;
 				break;
-			case (Resource.Desert, _):
+			case (Resource.Desert, false):
 				hex.Fill = DesertImage;
 				break;
 			case (_, true):
@@ -216,7 +214,7 @@ public partial class DebugWindow{
 
 		Grid grid = new();
 		grid.Children.Add(hex);
-		if (gameTile.Resource != Resource.Water && !gameTile.Harbor)
+		if (gameTile.Resource != Resource.Water && !gameTile.Harbour)
 			grid.Children.Add(value);
 
 		return grid;
@@ -243,9 +241,9 @@ public partial class DebugWindow{
 	}
 
 	private void RoadClick(object sender, RoutedEventArgs e) {
-		for (int index = 0; index < _roads.Length; index++){
-			Line? road = _roads[index];
-			if (road == null || _game.Roads[index].Player != 0)
+		for (int index = 0; index < Roads.Length; index++){
+			Line? road = Roads[index];
+			if (road == null || Game.Roads[index].Player != 0)
 				continue;
 
 			road.MouseLeftButtonUp += (_, _) => { };

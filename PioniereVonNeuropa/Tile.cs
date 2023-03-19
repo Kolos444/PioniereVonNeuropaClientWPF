@@ -5,10 +5,10 @@ public class Tile{
 	/// Initalisiert die Klasse mit den nötigen Arrays für benachbarte ID's
 	/// </summary>
 	/// <param name="id">Eindeutige Nummer</param>
-	/// <param name="harbor"></param>
-	private Tile(int id, bool harbor) {
+	/// <param name="harbour"></param>
+	private Tile(int id, bool harbour) {
 		ID     = id;
-		Harbor = harbor;
+		Harbour = harbour;
 
 		Neighbours = new int[6];
 		Nodes      = new int[6];
@@ -55,7 +55,7 @@ public class Tile{
 
 	public Resource Resource { get; set; }
 	public int     Value    { get; set; }
-	public bool     Harbor   { get; set; }
+	public bool     Harbour   { get; set; }
 
 	/// <summary>
 	/// 0-5
@@ -72,6 +72,7 @@ public class Tile{
 	/// 0 - 5 Oben bis Oben Links
 	/// </summary>
 	public int[] Nodes { get; set; }
+	public int[] HarbourConnections { get; set; }
 
 	/// <summary>
 	/// 0-5
