@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 using PioniereVonNeuropa.GeneratePlayableGame;
+using PioniereVonNeuropaLibrary;
 
 namespace PioniereVonNeuropa.Debug;
 
@@ -55,7 +56,7 @@ public partial class DebugWindow{
 		}
 
 		Game = JsonSerializer.Deserialize<Game>(openFileDialog.OpenFile())!;
-		Game = Generator.GenerateGame(Game);
+		Game.MakePlayable(Game);
 		CreateField();
 	}
 

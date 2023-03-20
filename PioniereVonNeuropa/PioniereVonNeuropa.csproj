@@ -7,4 +7,10 @@
         <UseWPF>true</UseWPF>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Reference Include="PioniereVonNeuropaLibrary">
+        <HintPath>..\..\PioniereVonNeuropaLibrary\PioniereVonNeuropaLibrary\bin\Debug\net7.0-windows\PioniereVonNeuropaLibrary.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>
