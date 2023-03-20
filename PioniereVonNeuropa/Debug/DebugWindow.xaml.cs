@@ -7,8 +7,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.Win32;
-using PioniereVonNeuropa.GeneratePlayableGame;
 using PioniereVonNeuropaLibrary;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace PioniereVonNeuropa.Debug;
 
@@ -73,7 +73,7 @@ public partial class DebugWindow{
 
 		Roads = new Line[Game.Roads.Length];
 		for (int index = 0; index < Hexes.Length; index++){
-			if (Game.Tiles[index].Resource == Resource.Water || Game.Tiles[index].Harbour)
+			if (Game.Tiles[index].Resource == Resource.None || Game.Tiles[index].Harbour)
 				continue;
 
 			double left = Canvas.GetLeft(Hexes[index]);
@@ -189,11 +189,8 @@ public partial class DebugWindow{
 			case (Resource.Sheep, false):
 				hex.Fill = SheepImage;
 				break;
-			case (Resource.Water, false):
+			case (Resource.None, false):
 				hex.Fill = Brushes.Transparent;
-				break;
-			case (Resource.Land, false):
-				hex.Fill = LandImage;
 				break;
 			case (Resource.Desert, false):
 				hex.Fill = DesertImage;
@@ -215,7 +212,7 @@ public partial class DebugWindow{
 
 		Grid grid = new();
 		grid.Children.Add(hex);
-		if (gameTile.Resource != Resource.Water && !gameTile.Harbour)
+		if (gameTile.Resource != Resource.None && !gameTile.Harbour)
 			grid.Children.Add(value);
 
 		return grid;

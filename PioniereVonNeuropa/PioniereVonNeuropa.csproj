@@ -13,4 +13,25 @@
       </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="images\Brick.jpg" />
+      <Resource Include="Images\Brick.jpg" />
+      <None Remove="images\Harbour.png" />
+      <Resource Include="Images\Harbour.png" />
+      <None Remove="images\Ore.jpg" />
+      <Resource Include="Images\Ore.jpg" />
+      <None Remove="images\Sheep.jpg" />
+      <Resource Include="Images\Sheep.jpg" />
+      <None Remove="images\water.jpeg" />
+      <Resource Include="Images\Water.jpeg" />
+      <None Remove="images\Wheat.jpg" />
+      <Resource Include="Images\Wheat.jpg" />
+      <None Remove="images\Wood.jpg" />
+      <Resource Include="Images\Wood.jpg" />
+      <None Remove="Images\Desert.jpg" />
+      <Resource Include="Images\Desert.jpg" />
+      <None Remove="Images\Dirt.JPG" />
+      <Resource Include="Images\Dirt.JPG" />
+    </ItemGroup>
+
 </Project>

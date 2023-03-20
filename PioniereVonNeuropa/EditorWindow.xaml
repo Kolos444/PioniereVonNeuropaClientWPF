@@ -18,7 +18,7 @@
 		<StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Background="DarkSlateGray">
 			<GroupBox Header="Malen mit">
 				<StackPanel>
-					<Button Click="ButtonLandClick" Width="100" Height="30">Land</Button>
+					<Button Click="ButtonLandClick" Width="100" Height="30" >PaintLand</Button>
 					<Button Click="ButtonWasserClick" Width="100" Height="30">Wasser</Button>
 					<Button Click="ButtonHafenClick" Width="100" Height="30">Möglicher Hafen</Button>
 					<Button Click="ButtonHolzClick" Width="100" Height="30">Holz</Button>
@@ -49,9 +49,9 @@
 			<GroupBox Header="Einstellungen">
 				<StackPanel>
 					<Label>Wüsten</Label>
-					<TextBox Name="TextBoxDeserts" PreviewTextInput="OnlyTypeNumber" />
+					<TextBox Name="TextBoxDeserts" PreviewTextInput="OnlyTypeNumber" >0</TextBox>
 					<Label>Häfen</Label>
-					<TextBox Name="TextBoxHarbours" PreviewTextInput="OnlyTypeNumber" />
+					<TextBox Name="TextBoxHarbours" PreviewTextInput="OnlyTypeNumber" >0</TextBox>
 				</StackPanel>
 			</GroupBox>
 			<GroupBox Header="Datei">
@@ -64,4 +64,5 @@
 		</StackPanel>
 		<StackPanel Grid.Row="1" Grid.Column="0" Background="DarkSlateGray"></StackPanel>
 	</Grid>
+
 </Window>

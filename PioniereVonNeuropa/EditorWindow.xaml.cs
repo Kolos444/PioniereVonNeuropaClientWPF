@@ -1,28 +1,32 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.Win32;
+using PioniereVonNeuropaLibrary;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace PioniereVonNeuropa{
 	/// <summary>
 	/// Interaction logic for EditorWindow.xaml
 	/// </summary>
 	public partial class EditorWindow{
-		private const           int    HexagonWidth  = 140;
+		private const           int    HexagonWidth  = 100;
 		private static readonly int    HexagonRadius = (int)(HexagonWidth / Math.Sqrt(3));
 		private static readonly int    HexagonHeight = 2 * HexagonRadius;
 		private const           int    RoadWidth     = 6;
 		private const           double NodeDiameter  = HexagonWidth * 0.15;
 
-		private Resource _malt = Resource.Land;
+		private Resource PaintResource = Resource.None;
 		private Game?    _game;
-		private bool     Harbour = false;
+		private bool     PaintHarbour = false;
 
 		public EditorWindow() {
 			InitializeComponent();
@@ -41,11 +45,14 @@ namespace PioniereVonNeuropa{
 		}
 
 		private void CreateGame(Game newGame) {
-			CanvasBoard.Children.Clear();
 			_game = newGame;
+			CanvasBoard.Children.Clear();
+
+			ReadSettings(newGame.Settings);
+
 			for (int y = 0; y < _game.Height; y++){
 				for (int x = 0; x < _game.Width; x++){
-					Grid uiElement = CreateHex(ref _game.Tiles[y * _game.Width + x]);
+					Grid uiElement = CreateHex(_game.Tiles[y * _game.Width + x]);
 
 					Canvas.SetTop(uiElement, NodeDiameter + y * (HexagonHeight + RoadWidth) * 0.75);
 					if (y % 2 == 0)
@@ -60,7 +67,12 @@ namespace PioniereVonNeuropa{
 			}
 		}
 
-		private Grid CreateHex(ref Tile tile) {
+		private void ReadSettings(Settings settings) {
+			TextBoxHarbours.Text = settings.HarbourSettings.Harbours.ToString();
+			TextBoxDeserts.Text  = settings.Deserts.ToString();
+		}
+
+		private Grid CreateHex(Tile tile) {
 			Grid grid = new Grid();
 
 			Polygon hex = new() {
@@ -72,68 +84,88 @@ namespace PioniereVonNeuropa{
 					new(0, 0.75            * HexagonHeight),
 					new(0, 0.25            * HexagonHeight)
 				},
-				Fill = GetResourceBrush(tile.Resource)
 			};
 
 			Label value = new() {
-				Content = tile.Value
+				Content    = tile.Value,
+				Background = Brushes.Bisque
 			};
+
+			if (!tile.Land)
+				value.Visibility = Visibility.Hidden;
+
 			value.HorizontalAlignment = HorizontalAlignment.Center;
 			value.VerticalAlignment   = VerticalAlignment.Center;
 
-			int arrayAccesor = tile.ID - 1;
-			grid.MouseLeftButtonDown += (_, _) => {
-				if (!Harbour){
-					if (_game.Tiles[arrayAccesor].Resource == _malt)
-						return;
+			if (tile.Harbour){
+				hex.Fill = FindResource("Hafen") as ImageBrush ??
+						   throw new InvalidOperationException("Hafen Resource nicht gefunden");
+			} else if (tile.Land){
+				hex.Fill = GetLandBrush(tile.Resource);
+			} else{
+				hex.Fill = FindResource("Wasser") as ImageBrush ??
+						   throw new InvalidOperationException("Wasser Resource nicht gefunden");
+			}
 
-					_game.Tiles[arrayAccesor].Resource = _malt;
-					hex.Fill                           = GetResourceBrush(_malt);
-					_game.Tiles[arrayAccesor].Harbour   = false;
-				}
-				else{
-					_game.Tiles[arrayAccesor].Harbour   = true;
-					_game.Tiles[arrayAccesor].Resource = Resource.None;
-					hex.Fill                           = Brushes.Aqua;
+			grid.MouseLeftButtonUp += (_, _) => {
+				if (PaintHarbour){
+					hex.Fill = FindResource("Hafen") as ImageBrush ??
+							   throw new InvalidOperationException("Hafen Resource nicht gefunden");
+					Game.MakeHarbourTile(tile);
+					value.Visibility = Visibility.Hidden;
+				} else if (PaintLand){
+					hex.Fill = GetLandBrush(PaintResource);
+					Game.MakeLandTile(tile, PaintResource);
+					value.Visibility = Visibility.Visible;
+				} else if (PaintValue != 0 && tile.Land){
+					value.Content = PaintValue;
+					tile.Value    = PaintValue;
+				} else{
+					hex.Fill = FindResource("Wasser") as ImageBrush ??
+							   throw new InvalidOperationException("Wasser Resource nicht gefunden");
+					Game.MakeWaterTile(tile);
+					value.Visibility = Visibility.Hidden;
 				}
 			};
+
 			grid.Children.Add(hex);
 			grid.Children.Add(value);
 			return grid;
 		}
 
-		private static Brush GetResourceBrush(Resource resource) {
-			Brush brush;
+		private ImageBrush GetLandBrush(Resource resource) {
+			ImageBrush brush;
 			switch (resource){
 				case Resource.None:
-					brush = Brushes.Black;
+					brush = FindResource("Land") as ImageBrush ??
+							throw new InvalidOperationException("Land Resource nicht gefunden");
 					break;
 				case Resource.Wood:
-					brush = Brushes.DarkGreen;
+					brush = FindResource("Holz") as ImageBrush ??
+							throw new InvalidOperationException("Holz Resource nicht gefunden");
 					break;
 				case Resource.Wheat:
-					brush = Brushes.Yellow;
-					break;
-				case Resource.Brick:
-					brush = Brushes.OrangeRed;
-					break;
-				case Resource.Ore:
-					brush = Brushes.DarkGray;
+					brush = FindResource("Weizen") as ImageBrush ??
+							throw new InvalidOperationException("Weizen Resource nicht gefunden");
 					break;
 				case Resource.Sheep:
-					brush = Brushes.LawnGreen;
+					brush = FindResource("Schaf") as ImageBrush ??
+							throw new InvalidOperationException("Schaf Resource nicht gefunden");
 					break;
-				case Resource.Water:
-					brush = Brushes.Blue;
+				case Resource.Ore:
+					brush = FindResource("Erz") as ImageBrush ??
+							throw new InvalidOperationException("Erz Resource nicht gefunden");
 					break;
-				case Resource.Land:
-					brush = Brushes.Brown;
+				case Resource.Brick:
+					brush = FindResource("Lehm") as ImageBrush ??
+							throw new InvalidOperationException("Lehm Resource nicht gefunden");
 					break;
 				case Resource.Desert:
-					brush = Brushes.NavajoWhite;
+					brush = FindResource("Wueste") as ImageBrush ??
+							throw new InvalidOperationException("Wueste Resource nicht gefunden");
 					break;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(resource));
+					throw new ArgumentOutOfRangeException();
 			}
 
 			return brush;
@@ -141,17 +173,29 @@ namespace PioniereVonNeuropa{
 
 
 		private void ButtonLandClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Land;
+			PaintHarbour = false;
+			PaintLand    = true;
+			PaintValue   = 0;
+
+			PaintResource = Resource.None;
 		}
 
 		private void ButtonWasserClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Water;
+			PaintHarbour = false;
+			PaintLand    = false;
+			PaintValue   = 0;
+
+			PaintResource = Resource.None;
 		}
 
+		public bool PaintLand { get; set; }
+
 		private void ButtonHafenClick(object sender, RoutedEventArgs e) {
-			Harbour = true;
+			PaintHarbour = true;
+			PaintLand    = true;
+			PaintValue   = 0;
+
+			PaintResource = Resource.None;
 		}
 
 
@@ -160,8 +204,8 @@ namespace PioniereVonNeuropa{
 				Filter = "json files (*.json)|*.json"
 			};
 
-			_game.MaxHarbour = Convert.ToInt32(TextBoxHarbours.Text);
-			_game.Deserts  = Convert.ToInt32(TextBoxDeserts.Text);
+			_game.Settings.HarbourSettings.Harbours = Convert.ToInt32(TextBoxHarbours.Text);
+			_game.Settings.Deserts                  = Convert.ToInt32(TextBoxDeserts.Text);
 
 			if (test.ShowDialog() == true){
 				Stream stream = test.OpenFile();
@@ -176,9 +220,10 @@ namespace PioniereVonNeuropa{
 		}
 
 		private void ButtonsLadenClick(object sender, RoutedEventArgs e) {
-			OpenFileDialog fileDialog = new OpenFileDialog();
+			OpenFileDialog fileDialog = new() {
+				Filter = "json files (*.json)|*.json"
+			};
 
-			fileDialog.Filter = "json files (*.json)|*.json";
 			if (fileDialog.ShowDialog() == true){
 				Stream stream = fileDialog.OpenFile();
 
@@ -195,51 +240,66 @@ namespace PioniereVonNeuropa{
 		}
 
 		private void ButtonLehmClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Brick;
+			PaintHarbour = false;
+			PaintLand    = true;
+			PaintValue   = 0;
+
+			PaintResource = Resource.Brick;
 		}
 
 		private void ButtonWolleClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Sheep;
+			PaintHarbour = false;
+			PaintLand    = true;
+			PaintValue   = 0;
+
+			PaintResource = Resource.Sheep;
 		}
 
 		private void ButtonErzClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Ore;
+			PaintHarbour = false;
+			PaintLand    = true;
+			PaintValue   = 0;
+
+			PaintResource = Resource.Ore;
 		}
 
 		private void ButtonWeizenClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Wheat;
+			PaintHarbour = false;
+			PaintLand    = true;
+			PaintValue   = 0;
+
+			PaintResource = Resource.Wheat;
 		}
 
 		private void ButtonHolzClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Wood;
+			PaintHarbour = false;
+			PaintLand    = true;
+			PaintValue   = 0;
+
+			PaintResource = Resource.Wood;
 		}
 
 		private void ButtonWertClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.None;
+			PaintHarbour  = false;
+			PaintLand     = false;
+			PaintValue    = Convert.ToInt32(ComboBoxWert.Text);
+			PaintResource = Resource.None;
 		}
+
+		public int PaintValue { get; set; }
 
 
 		private void ButtonWuesteClick(object sender, RoutedEventArgs e) {
-			Harbour = false;
-			_malt   = Resource.Desert;
+			PaintHarbour  = false;
+			PaintLand     = false;
+			PaintValue    = 0;
+			PaintResource = Resource.Desert;
 		}
 
 		private static readonly Regex _regex = new Regex("[^0-9.-]+"); //regex that matches disallowed text
+
 		private void OnlyTypeNumber(object sender, TextCompositionEventArgs e) {
 			e.Handled = _regex.IsMatch(e.Text);
 		}
-	}
-
-
-	internal enum ROADDIRECTION{
-		Vertical,
-		UpDown,
-		DownUp
 	}
 }
