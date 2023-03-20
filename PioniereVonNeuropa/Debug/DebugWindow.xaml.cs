@@ -20,14 +20,6 @@ public partial class DebugWindow{
 	private const           double NodeDiameter = HexagonWidth * 0.15;
 	private static readonly Color  RoadColor    = Color.FromRgb(255, 105, 0);
 
-	private readonly ImageBrush WoodImage   = new(new BitmapImage(new("E:/Bilder/anime/Wood.jpg", UriKind.Absolute)));
-	private readonly ImageBrush WheatImage  = new(new BitmapImage(new("E:/Bilder/anime/Wheat.jpg", UriKind.Absolute)));
-	private readonly ImageBrush BrickImage  = new(new BitmapImage(new("E:/Bilder/anime/Brick.jpg", UriKind.Absolute)));
-	private readonly ImageBrush SheepImage  = new(new BitmapImage(new("E:/Bilder/anime/Sheep.jpg", UriKind.Absolute)));
-	private readonly ImageBrush OreImage    = new(new BitmapImage(new("E:/Bilder/anime/Ore.jpg", UriKind.Absolute)));
-	private readonly ImageBrush LandImage   = new(new BitmapImage(new("E:/Bilder/anime/Dirt.JPG", UriKind.Absolute)));
-	private readonly ImageBrush DesertImage = new(new BitmapImage(new("E:/Bilder/anime/Desert.jpg", UriKind.Absolute)));
-
 	private readonly ImageBrush HarbourImage =
 		new(new BitmapImage(new("E:/Bilder/anime/Harbour.png", UriKind.Absolute)));
 
@@ -121,7 +113,7 @@ public partial class DebugWindow{
 	}
 
 	protected Grid CreateTileElement(int y, int x) {
-		Grid hex = CreateHex(ref Game.Tiles[y * Game.Width + x]);
+		Grid hex = CreateHex(Game.Tiles[y * Game.Width + x]);
 
 		Canvas.SetTop(hex, NodeDiameter + y * (HexagonHeight + RoadWidth) * 0.75);
 		if (y % 2 == 0)
@@ -161,7 +153,9 @@ public partial class DebugWindow{
 		};
 	}
 
-	private Grid CreateHex(ref Tile gameTile) {
+	private Grid CreateHex(Tile tile) {
+		Grid grid = new();
+
 		Polygon hex = new() {
 			Points = new() {
 				new(HexagonWidth       * 0.5, 0),
@@ -173,49 +167,120 @@ public partial class DebugWindow{
 			}
 		};
 
-		switch (gameTile.Resource, Harbor: gameTile.Harbour){
-			case (Resource.Wood, false):
-				hex.Fill = WoodImage;
-				break;
-			case (Resource.Wheat, false):
-				hex.Fill = WheatImage;
-				break;
-			case (Resource.Brick, false):
-				hex.Fill = BrickImage;
-				break;
-			case (Resource.Ore, false):
-				hex.Fill = OreImage;
-				break;
-			case (Resource.Sheep, false):
-				hex.Fill = SheepImage;
-				break;
-			case (Resource.None, false):
-				hex.Fill = Brushes.Transparent;
-				break;
-			case (Resource.Desert, false):
-				hex.Fill = DesertImage;
-				break;
-			case (_, true):
-				hex.Fill = HarbourImage;
-				break;
-			default:
-				throw new ArgumentOutOfRangeException();
-		}
-
 		Label value = new() {
-			Content             = gameTile.Value,
+			Content             = tile.Value,
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment   = VerticalAlignment.Center,
 			FontSize            = HexagonHeight * 0.2,
 			Background          = Brushes.GhostWhite
 		};
 
-		Grid grid = new();
+		if (tile.Harbour){
+			hex.Fill = FindResource("Hafen") as ImageBrush ??
+					   throw new InvalidOperationException("Hafen Resource nicht gefunden");
+		} else if (tile.Land){
+			hex.Fill = GetLandBrush(tile.Resource);
+		} else{
+			hex.Fill = FindResource("Wasser") as ImageBrush ??
+					   throw new InvalidOperationException("Wasser Resource nicht gefunden");
+		}
+
 		grid.Children.Add(hex);
-		if (gameTile.Resource != Resource.None && !gameTile.Harbour)
+		if (tile.Harbour)
+			grid.Children.Add(CreateHarbourLines(tile));
+		if (tile.Harbour && tile.Resource != Resource.None){
+			value.Content = tile.Resource.ToString();
+		}
+		if (tile.Land || (tile.Harbour && tile.Resource != Resource.Desert))
 			grid.Children.Add(value);
 
 		return grid;
+	}
+
+	private UIElement CreateHarbourLines(Tile tile) {
+		Grid grid = new Grid();
+
+		for (int i = 0; i < tile.Nodes.Length; i++)
+			if (tile.Nodes[i] != 0)
+				grid.Children.Add(CreateHarbourLine(i));
+
+		return grid;
+	}
+
+	private UIElement CreateHarbourLine(int i) {
+		Line line = new() {
+			X1 = HexagonWidth * 0.5,
+			Y1 = HexagonWidth * 0.5,
+			Stroke = Brushes.Brown,
+			StrokeThickness = RoadWidth * 1.2
+		};
+
+		switch (i){
+			case 0:
+				line.X2 = HexagonWidth * 0.5;
+				line.Y2 = 0;
+				break;
+			case 1:
+				line.X2 = HexagonWidth;
+				line.Y2 = HexagonHeight * 0.25;
+				break;
+			case 2:
+				line.X2 = HexagonWidth;
+				line.Y2 = HexagonHeight * 0.75;
+				break;
+			case 3:
+				line.X2 = HexagonWidth * 0.5;
+				line.Y2 = HexagonHeight;
+				break;
+			case 4:
+				line.X2 = 0;
+				line.Y2 = HexagonHeight * 0.75;
+				break;
+			case 5:
+				line.X2 = 0;
+				line.Y2 = HexagonHeight * 0.25;
+				break;
+		}
+
+		return line;
+	}
+
+	private ImageBrush GetLandBrush(Resource resource) {
+		ImageBrush brush;
+		switch (resource){
+			case Resource.None:
+				brush = FindResource("Land") as ImageBrush ??
+						throw new InvalidOperationException("Land Resource nicht gefunden");
+				break;
+			case Resource.Wood:
+				brush = FindResource("Holz") as ImageBrush ??
+						throw new InvalidOperationException("Holz Resource nicht gefunden");
+				break;
+			case Resource.Wheat:
+				brush = FindResource("Weizen") as ImageBrush ??
+						throw new InvalidOperationException("Weizen Resource nicht gefunden");
+				break;
+			case Resource.Sheep:
+				brush = FindResource("Schaf") as ImageBrush ??
+						throw new InvalidOperationException("Schaf Resource nicht gefunden");
+				break;
+			case Resource.Ore:
+				brush = FindResource("Erz") as ImageBrush ??
+						throw new InvalidOperationException("Erz Resource nicht gefunden");
+				break;
+			case Resource.Brick:
+				brush = FindResource("Lehm") as ImageBrush ??
+						throw new InvalidOperationException("Lehm Resource nicht gefunden");
+				break;
+			case Resource.Desert:
+				brush = FindResource("Wueste") as ImageBrush ??
+						throw new InvalidOperationException("Wueste Resource nicht gefunden");
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
+		}
+
+		return brush;
 	}
 
 	private void DevcardClick(object sender, RoutedEventArgs e) {
