@@ -14,7 +14,7 @@
 			<RowDefinition Height="1*" />
 			<RowDefinition Height="250" />
 		</Grid.RowDefinitions>
-		<Canvas Grid.ColumnSpan="2" Grid.RowSpan="2" Name="ContainingCanvas" Background="DarkBlue">
+		<Canvas Grid.ColumnSpan="2" Grid.RowSpan="2" Name="ContainingCanvas" Background="#0966A5">
 			<Canvas Name="BoardCanvas" Background="Indigo"></Canvas>
 		</Canvas>
 

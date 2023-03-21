@@ -35,7 +35,7 @@ namespace PioniereVonNeuropa{
 		}
 
 		private void CreateInstance() {
-			Feldgroesse feldgroesse = new Feldgroesse();
+			Feldgroesse feldgroesse = new();
 			if (feldgroesse.ShowDialog() == true)
 				CreateGame(feldgroesse.Width, feldgroesse.Height);
 		}

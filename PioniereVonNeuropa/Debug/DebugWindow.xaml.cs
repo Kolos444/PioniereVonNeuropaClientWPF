@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,12 +18,9 @@ public partial class DebugWindow{
 	#region Einstellbare Werte
 
 	private const           int    HexagonWidth = 100;
-	private const           int    RoadWidth    = 12;
+	private const           int    RoadWidth    = 6;
 	private const           double NodeDiameter = HexagonWidth * 0.15;
-	private static readonly Color  RoadColor    = Color.FromRgb(255, 105, 0);
-
-	private readonly ImageBrush HarbourImage =
-		new(new BitmapImage(new("E:/Bilder/anime/Harbour.png", UriKind.Absolute)));
+	private static readonly Color  RoadColor    = Color.FromRgb(222, 180, 103);
 
 	#endregion
 
@@ -32,9 +31,11 @@ public partial class DebugWindow{
 
 	#endregion
 
-	private Game    Game;
-	private Line?[] Roads;
-	private Grid[]  Hexes;
+	private Game           Game;
+	private Line?[]        Roads;
+	private Grid[]         Hexes;
+	private UIElement?[]   Nodes;
+	private List<Player> Players;
 
 	public DebugWindow() {
 		InitializeComponent();
@@ -49,6 +50,7 @@ public partial class DebugWindow{
 
 		Game = JsonSerializer.Deserialize<Game>(openFileDialog.OpenFile())!;
 		Game.MakePlayable(Game);
+		Players = new(Game.Settings.Players);
 		CreateField();
 	}
 
@@ -64,6 +66,7 @@ public partial class DebugWindow{
 		}
 
 		Roads = new Line[Game.Roads.Length];
+		Nodes = new UIElement[Game.Nodes.Length];
 		for (int index = 0; index < Hexes.Length; index++){
 			if (Game.Tiles[index].Resource == Resource.None || Game.Tiles[index].Harbour)
 				continue;
@@ -71,7 +74,7 @@ public partial class DebugWindow{
 			double left = Canvas.GetLeft(Hexes[index]);
 			double top  = Canvas.GetTop(Hexes[index]);
 
-			ref Tile tile = ref Game.Tiles[index];
+			Tile tile = Game.Tiles[index];
 
 			for (int r = 0; r < tile.Roads.Length; r++){
 				if (Roads[Game.Roads[tile.Roads[r] - 1].ID - 1] != null)
@@ -109,7 +112,43 @@ public partial class DebugWindow{
 				BoardCanvas.Children.Add(road);
 				Roads[Game.Roads[tile.Roads[r] - 1].ID - 1] = road;
 			}
+
+			if (!tile.Land){
+				continue;
+			}
+
+			for (int direction = 0; direction < tile.Nodes.Length; direction++){
+				int nodeID = tile.Nodes[direction];
+				if (Nodes[nodeID - 1] == null){
+					Ellipse uiElement = CreateNodeUI(Game.Nodes[nodeID - 1]);
+
+					Grid hex = Hexes[tile.ID - 1];
+
+					Polygon polygon = hex.Children[0] as Polygon ??
+									  throw new InvalidOperationException("hex.Children[0]");
+
+
+					left = Canvas.GetLeft(hex);
+					top  = Canvas.GetTop(hex);
+
+					Canvas.SetLeft(uiElement, polygon.Points[direction].X + left - uiElement.Width *0.5);
+					Canvas.SetTop(uiElement, polygon.Points[direction].Y  + top  - uiElement.Width *0.5);
+
+					Nodes[nodeID - 1] = uiElement;
+					BoardCanvas.Children.Add(uiElement);
+				}
+			}
 		}
+	}
+
+	private Ellipse CreateNodeUI(Node gameNode) {
+		Ellipse uiElement = new Ellipse() {
+			Fill   = new SolidColorBrush(RoadColor),
+			Width  = HexagonWidth * 0.2,
+			Height = HexagonWidth * 0.2
+		};
+
+		return uiElement;
 	}
 
 	protected Grid CreateTileElement(int y, int x) {
@@ -191,6 +230,7 @@ public partial class DebugWindow{
 		if (tile.Harbour && tile.Resource != Resource.None){
 			value.Content = tile.Resource.ToString();
 		}
+
 		if (tile.Land || (tile.Harbour && tile.Resource != Resource.Desert))
 			grid.Children.Add(value);
 
@@ -207,15 +247,15 @@ public partial class DebugWindow{
 		return grid;
 	}
 
-	private UIElement CreateHarbourLine(int i) {
+	private UIElement CreateHarbourLine(int direction) {
 		Line line = new() {
-			X1 = HexagonWidth * 0.5,
-			Y1 = HexagonWidth * 0.5,
-			Stroke = Brushes.Brown,
+			X1              = HexagonWidth * 0.5,
+			Y1              = HexagonWidth * 0.5,
+			Stroke          = new SolidColorBrush(Color.FromRgb(219, 148, 47)),
 			StrokeThickness = RoadWidth * 1.2
 		};
 
-		switch (i){
+		switch (direction){
 			case 0:
 				line.X2 = HexagonWidth * 0.5;
 				line.Y2 = 0;
@@ -304,20 +344,70 @@ public partial class DebugWindow{
 	}
 
 	private void RoadClick(object sender, RoutedEventArgs e) {
-		for (int index = 0; index < Roads.Length; index++){
-			Line? road = Roads[index];
-			if (road == null || Game.Roads[index].Player != 0)
-				continue;
+		if (!RoadActive){
+			for (int index = 0; index < Roads.Length; index++){
+				Line? road = Roads[index];
+				if (road == null || Game.Roads[index].Player != 0)
+					continue;
 
-			road.MouseLeftButtonUp += (_, _) => { };
-			road.MouseEnter += (_, _) => {
-				road.Cursor = Cursors.Hand;
-				road.Stroke = Brushes.GreenYellow;
-			};
-			road.MouseLeave += (_, _) => {
-				road.Cursor = Cursors.Arrow;
-				road.Stroke = new SolidColorBrush(RoadColor);
-			};
+				int index1 = index;
+				road.MouseLeftButtonUp += (_, _) => {
+					if (!Game.MakeRoadPlayer(Game.Roads[index1], new(1,new() )))
+						return;
+
+					road.Fill = Brushes.Red;
+					RoadClick(sender, e);
+				};
+				road.MouseEnter += (_, _) => {
+					road.Cursor = Cursors.Hand;
+					road.Stroke = Brushes.GreenYellow;
+				};
+				road.MouseLeave += (_, _) => {
+					road.Cursor = Cursors.Arrow;
+					road.Stroke = new SolidColorBrush(RoadColor);
+				};
+			}
+		} else{
+			foreach (Line? road in Roads){
+				if (road ==null)
+					continue;
+
+				RemoveRoutedEventHandlers(road,Line.MouseUpEvent);
+				RemoveRoutedEventHandlers(road,Line.MouseEnterEvent);
+				RemoveRoutedEventHandlers(road,Line.MouseLeaveEvent);
+			}
 		}
+
+
+		RoadActive = !RoadActive;
+	}
+
+	private bool RoadActive;
+
+	public int CurrentPlayer { get; set; }
+
+	public static void RemoveRoutedEventHandlers(UIElement element, RoutedEvent routedEvent)
+	{
+		// Get the EventHandlersStore instance which holds event handlers for the specified element.
+		// The EventHandlersStore class is declared as internal.
+		var eventHandlersStoreProperty = typeof(UIElement).GetProperty(
+			"EventHandlersStore", BindingFlags.Instance | BindingFlags.NonPublic);
+		object eventHandlersStore = eventHandlersStoreProperty.GetValue(element, null);
+
+		// If no event handlers are subscribed, eventHandlersStore will be null.
+		// Credit: https://stackoverflow.com/a/16392387/1149773
+		if (eventHandlersStore == null)
+			return;
+
+		// Invoke the GetRoutedEventHandlers method on the EventHandlersStore instance
+		// for getting an array of the subscribed event handlers.
+		var getRoutedEventHandlers = eventHandlersStore.GetType().GetMethod(
+			"GetRoutedEventHandlers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		var routedEventHandlers = (RoutedEventHandlerInfo[])getRoutedEventHandlers.Invoke(
+			eventHandlersStore, new object[] { routedEvent });
+
+		// Iteratively remove all routed event handlers from the element.
+		foreach (var routedEventHandler in routedEventHandlers)
+			element.RemoveHandler(routedEvent, routedEventHandler.Handler);
 	}
 }
